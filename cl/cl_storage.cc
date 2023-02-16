@@ -20,13 +20,16 @@
 #include "config_cl.h"
 #include "cl_storage.hh"
 
+#include <cerrno>
 #include <cl/clutil.hh>
 #include <cl/storage.hh>
 
 #include "builtins.hh"
 #include "util.hh"
 
+#include <cstdlib>
 #include <cstring>
+#include <iostream>
 #include <set>
 #include <stack>
 
@@ -627,10 +630,20 @@ void ClStorageBuilder::fnc_close()
     d->fnc = 0;
 }
 
-void ClStorageBuilder::bb_open(const char *bb_name)
+void ClStorageBuilder::bb_open(const char *bb_name, const char * header, const char * latch)
 {
     ControlFlow &cfg = d->fnc->cfg;
     d->bb = cfg[bb_name];
+    
+    if(header!=NULL && latch!=NULL){
+        int old_errno = errno;
+        errno = 0;
+        int header_i = std::strtol(header, NULL, 10);
+        int latch_i = std::strtol(latch, NULL, 10);
+        if (errno == 0)
+            d->bb->set_loop_info(header_i, latch_i);
+        errno = old_errno;
+    }
 }
 
 void ClStorageBuilder::insn(const struct cl_insn *cli)

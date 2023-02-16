@@ -463,7 +463,9 @@ class Block {
          */
         Block(ControlFlow *cfg, const char *name):
             cfg_(cfg),
-            name_(name)
+            name_(name),
+            header_(-1),
+            latch_(-1)
         {
         }
 
@@ -537,11 +539,23 @@ class Block {
         /// return true, if a loop at the level of CFG starts with this block
         bool isLoopEntry() const;
 
+        void set_loop_info(int header, int latch)  {
+            if (this->header_ < 0 && header > 0) {
+                this->header_=header;
+                this->latch_=latch;
+            }
+        }
+
+        int loop_header() const                { return header_;        }
+        int loop_latch() const                 { return latch_;         }
+
     private:
         TList insns_;
         TTargetList inbound_;
         ControlFlow *cfg_;
         std::string name_;
+        int header_;
+        int latch_;
 };
 
 /**

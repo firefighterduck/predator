@@ -254,9 +254,11 @@ static void cl_wrap_fnc_close(
 
 static void cl_wrap_bb_open(
             struct cl_code_listener *self,
-            const char              *bb_name)
+            const char              *bb_name,
+            const char              *header,
+            const char              *latch)
 {
-    CL_WRAP_VA(bb_open, bb_name);
+    CL_WRAP_VA(bb_open, bb_name, header, latch);
 }
 
 static void cl_wrap_insn(

@@ -72,10 +72,12 @@ class ClfCbSeqChk: public ClFilterBase {
         }
 
         virtual void bb_open(
-            const char              *bb_name)
+            const char              *bb_name,
+            const char              *header,
+            const char              *latch)
         {
             this->setState(S_BLOCK_LEVEL);
-            ClFilterBase::bb_open(bb_name);
+            ClFilterBase::bb_open(bb_name, header, latch);
         }
 
         virtual void insn(
@@ -250,10 +252,12 @@ class ClfLabelChk: public ClFilterBase {
         }
 
         virtual void bb_open(
-            const char              *bb_name)
+            const char              *bb_name,
+            const char              *header,
+            const char              *latch)
         {
             this->defineLabel(bb_name);
-            ClFilterBase::bb_open(bb_name);
+            ClFilterBase::bb_open(bb_name, header, latch);
         }
 
         virtual void insn(

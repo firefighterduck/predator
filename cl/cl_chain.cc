@@ -52,7 +52,9 @@ class ClChain: public ICodeListener {
         virtual void fnc_close();
 
         virtual void bb_open(
-            const char              *bb_name);
+            const char              *bb_name,
+            const char              *header=0,
+            const char              *latch=0);
 
         virtual void insn(
             const struct cl_insn    *cli);
@@ -143,9 +145,11 @@ void ClChain::fnc_close()
 }
 
 void ClChain::bb_open(
-            const char              *bb_name)
+            const char              *bb_name,
+            const char              *header,
+            const char              *latch)
 {
-    CL_CHAIN_FOREACH_VA(bb_open, bb_name);
+    CL_CHAIN_FOREACH_VA(bb_open, bb_name, header, latch);
 }
 
 void ClChain::insn(

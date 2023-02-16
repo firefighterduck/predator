@@ -56,7 +56,7 @@ class ClTypeDotGenerator: public ICodeListener {
             fnc_.clear();
         }
 
-        virtual void bb_open(const char *) { }
+        virtual void bb_open(const char *,const char * =0,const char * =0) { }
 
         virtual void insn(const struct cl_insn *cli) {
             switch (cli->code) {

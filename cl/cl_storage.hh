@@ -66,7 +66,9 @@ class ClStorageBuilder: public ICodeListener {
         virtual void fnc_close();
 
         virtual void bb_open(
-            const char              *bb_name);
+            const char              *bb_name,
+            const char              *header=0,
+            const char              *latch=0);
 
         virtual void insn(
             const struct cl_insn    *cli);

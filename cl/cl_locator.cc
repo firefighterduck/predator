@@ -44,7 +44,7 @@ class ClLocator: public ICodeListener {
 
         virtual void fnc_arg_decl(int, const struct cl_operand *) { }
         virtual void fnc_close() { }
-        virtual void bb_open(const char *) { }
+        virtual void bb_open(const char *,const char * =0,const char * =0) { }
 
         virtual void insn(const struct cl_insn *cli) {
             this->printLocation(&cli->loc);

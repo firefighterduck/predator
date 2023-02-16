@@ -63,7 +63,9 @@ class ICodeListener {
 
         /// See cl_code_listener::bb_open
         virtual void bb_open(
-            const char              *bb_name)
+            const char              *bb_name,
+            const char              *header=0,
+            const char              *latch=0)
             = 0;
 
         /// See cl_code_listener::insn

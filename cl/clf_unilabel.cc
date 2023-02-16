@@ -23,6 +23,8 @@
 
 #include "cl_filter.hh"
 
+#include <cstdio>
+#include <iostream>
 #include <map>
 #include <sstream>
 #include <string>
@@ -46,10 +48,26 @@ class ClfUniLabel: public ClFilterBase {
         }
 
         virtual void bb_open(
-            const char              *bb_name)
+            const char              *bb_name,
+            const char              *header,
+            const char              *latch)
         {
+            std::string resolved_header;
+            const char *resolved_header_str=NULL;
+            if(header!=NULL) {
+                resolved_header = this->resolveLabel(header);
+                resolved_header_str = resolved_header.c_str();
+            }
+
+            std::string resolved_latch;
+            const char *resolved_latch_str=NULL;
+            if(latch!=NULL) {
+                resolved_latch = this->resolveLabel(latch);
+                resolved_latch_str = resolved_latch.c_str();
+            }
+
             std::string resolved(this->resolveLabel(bb_name));
-            ClFilterBase::bb_open(resolved.c_str());
+            ClFilterBase::bb_open(resolved.c_str(), resolved_header_str, resolved_latch_str);
         }
 
         virtual void insn(
@@ -129,7 +147,7 @@ ClfUniLabel::ClfUniLabel(ICodeListener *slave, cl_scope_e scope):
 std::string ClfUniLabel::resolveLabel(const char *label)
 {
     std::ostringstream str;
-    str << "L" << this->labelLookup(label);
+    str << this->labelLookup(label);
     return str.str();
 }
 

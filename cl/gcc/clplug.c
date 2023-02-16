@@ -22,6 +22,8 @@
 // this include has to be the first (according the gcc plug-in API)
 #include <gcc-plugin.h>
 #include <plugin-version.h>
+#include <cfgloop.h>
+#include <stdio.h>
 
 #if defined(GCCPLUGIN_VERSION_MAJOR) && (GCCPLUGIN_VERSION_MAJOR >= 8)
 #   define GCC_HOST_8_OR_NEWER
@@ -2087,8 +2089,21 @@ static void handle_fnc_bb(struct basic_block_def *bb)
 {
     // declare bb
     char *label = index_to_label(bb->index);
-    cl->bb_open(cl, label);
+    loop_p loop = bb->loop_father;
+    char *header_label = NULL;
+    char *latch_label = NULL;
+    if (loop && loop->header->index) {
+        header_label = index_to_label(loop->header->index);
+        latch_label = index_to_label(loop->latch->index);
+    }
+
+    cl->bb_open(cl, label, header_label, latch_label);
     free(label);
+
+    if(loop && loop->header->index){
+        free(header_label);
+        free(latch_label);
+    }
 
     // go through the bb's content
     struct gimple_walk_data data = { false };
@@ -2151,6 +2166,7 @@ static void handle_fnc_decl(tree decl)
     // emit fnc declaration
     struct cl_operand fnc;
     handle_operand(&fnc, decl);
+    loop_optimizer_init(LOOPS_HAVE_SIMPLE_LATCHES | LOOPS_HAVE_RECORDED_EXITS);
     cl->fnc_open(cl, &fnc);
 
     // emit arg declarations
@@ -2169,6 +2185,7 @@ static void handle_fnc_decl(tree decl)
 
     // fnc traverse complete
     cl->fnc_close(cl);
+    loop_optimizer_finalize();
 }
 
 // callback of tree pass declared in <tree-pass.h>

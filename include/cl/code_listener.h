@@ -865,7 +865,9 @@ struct cl_code_listener {
      */
     void (*bb_open)(
             struct cl_code_listener     *self,
-            const char                  *label);
+            const char                  *label,
+            const char                  *header,
+            const char                  *latch);
 
     /**
      * one-shot instruction callback

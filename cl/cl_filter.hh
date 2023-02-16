@@ -75,9 +75,11 @@ class ClFilterBase: public ICodeListener {
         }
 
         virtual void bb_open(
-            const char              *bb_name)
+            const char              *bb_name,
+            const char              *header=0,
+            const char              *latch=0)
         {
-            slave_->bb_open(bb_name);
+            slave_->bb_open(bb_name,header,latch);
         }
 
         virtual void insn(

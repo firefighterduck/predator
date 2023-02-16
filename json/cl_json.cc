@@ -23,6 +23,7 @@
 #include <cl/clutil.hh>
 #include <cl/storage.hh>
 #include <algorithm>
+#include <cstdio>
 #include <iostream>
 #include <cassert>
 #include <cmath>
@@ -531,10 +532,7 @@ static std::string to_json(const struct cl_operand &op) {
 /// dump basic block ID
 static std::string to_json(const Block *bb) {
     std::stringstream out;
-    const char *label = bb->name().c_str();      // L###
-    if (*label != 'L')
-        CL_ERROR("FIXME: Label name does not start with 'L'");
-    out << std::strtoul(label+1,NULL,10);   // FIXME fragile
+    out << bb->name(); 
     return out.str();
 }
 
@@ -679,11 +677,10 @@ static std::string to_json(const Insn &i) {
 static std::string to_json(const Block &bb) {
     std::stringstream out;
     out << std::boolalpha;
-    const char *label = bb.name().c_str();      // L###
-    out << "( " << std::strtoul(label+1,NULL,10) << ",\n"; // uid bb - FIXME fragile
+    out << "( " << bb.name() << ",\n";
     INDENT_UP;
     out << INDENT << "{\n";
-    out << INDENT << "\"name\": \"" << bb.name() << "\",\n";
+    out << INDENT << "\"name\": \"L" << bb.name() << "\",\n";
     out << INDENT << "\"insns\": [\n";
     int ni=0;
     for(auto instr: bb) {
@@ -694,7 +691,14 @@ static std::string to_json(const Block &bb) {
     out << INDENT << "],\n";
     //TODO: can be empty:
     out << INDENT << "\"targets\": " << to_json(bb.targets()) << ",\n";
-    out << INDENT << "\"inbounds\": " << to_json(bb.inbound()) << "\n";
+    out << INDENT << "\"inbounds\": " << to_json(bb.inbound());
+    if (bb.loop_header()>0) {
+        out << ",\n";
+        out << INDENT << "\"loop_header\": " << bb.loop_header() << ",\n";
+        out << INDENT << "\"loop_latch\": " << bb.loop_latch() << "\n";
+    } else {
+        out << "\n";
+    }
     out << INDENT << "})";
     INDENT_DOWN;
     return out.str();
