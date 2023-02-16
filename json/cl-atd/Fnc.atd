@@ -20,7 +20,7 @@ type block = {
   insns : insn list;
   targets : cl_uid list; (* block.uid list *)
   inbounds : cl_uid list; (* block.uid list *)
-  ?loop_head : cl_uid option;
+  ?loop_header : cl_uid option;
   ?loop_latch : cl_uid option;
 }
 
