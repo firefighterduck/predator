@@ -49,25 +49,35 @@ class ClfUniLabel: public ClFilterBase {
 
         virtual void bb_open(
             const char              *bb_name,
-            const char              *header,
-            const char              *latch)
+            int                     loop_parent)
         {
-            std::string resolved_header;
-            const char *resolved_header_str=NULL;
-            if(header!=NULL) {
-                resolved_header = this->resolveLabel(header);
-                resolved_header_str = resolved_header.c_str();
-            }
-
-            std::string resolved_latch;
-            const char *resolved_latch_str=NULL;
-            if(latch!=NULL) {
-                resolved_latch = this->resolveLabel(latch);
-                resolved_latch_str = resolved_latch.c_str();
-            }
-
             std::string resolved(this->resolveLabel(bb_name));
-            ClFilterBase::bb_open(resolved.c_str(), resolved_header_str, resolved_latch_str);
+            ClFilterBase::bb_open(resolved.c_str(), loop_parent);
+        }
+
+        virtual void loop(
+            int                     id,
+            const char              *header,
+            const char              *latch,
+            std::vector<int>  &children)
+        {
+            std::string resolved_header(this->resolveLabel(header));
+            std::string resolved_latch(this->resolveLabel(latch));
+
+            ClFilterBase::loop(
+                id, 
+                resolved_header.c_str(), 
+                resolved_latch.c_str(),
+                children
+            );
+        }
+
+        virtual void loop_exit(
+            int                     id,
+            const char              *exit_bb)
+        {
+            std::string resolved(this->resolveLabel(exit_bb));
+            ClFilterBase::loop_exit(id, resolved.c_str());
         }
 
         virtual void insn(

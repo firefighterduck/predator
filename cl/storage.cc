@@ -475,6 +475,63 @@ Node::~Node()
 }
 
 // /////////////////////////////////////////////////////////////////////////////
+// Loop implementation
+void Loop::appendChild(Loop *child) {
+    this->children_.push_back(child);
+    child->parent_ = this;
+}
+
+void Loop::appendExit(const Block *exit_bb) {
+    this->exits_.push_back(exit_bb);
+}
+
+// /////////////////////////////////////////////////////////////////////////////
+// LoopInfo implementation
+struct LoopInfo::Private {
+    typedef std::map<int, unsigned> TMap;
+    TMap db;
+};
+
+LoopInfo::LoopInfo():
+    d(new Private)
+{
+}
+
+LoopInfo::LoopInfo(const LoopInfo &ref):
+    loops_(ref.loops_),
+    d(new Private(*ref.d))
+{
+}
+
+LoopInfo::~LoopInfo()
+{
+    delete d;
+}
+
+LoopInfo& LoopInfo::operator=(const LoopInfo &ref)
+{
+    loops_ = ref.loops_;
+    delete d;
+    d = new Private(*ref.d);
+    return *this;
+}
+
+Loop*& LoopInfo::operator[](int id)
+{
+    Loop* &ref = dbLookup(d->db, loops_, id, 0);
+    if (!ref)
+        // the object will be NOT destroyed by LoopInfo
+        ref = new Loop(id);
+
+    return ref;
+}
+
+const Loop* LoopInfo::operator[](int id) const
+{
+    return dbConstLookup(d->db, loops_, id);
+}
+
+// /////////////////////////////////////////////////////////////////////////////
 // ControlFlow implementation
 struct ControlFlow::Private {
     typedef std::map<std::string, unsigned> TMap;
@@ -488,6 +545,7 @@ ControlFlow::ControlFlow():
 
 ControlFlow::ControlFlow(const ControlFlow &ref):
     bbs_(ref.bbs_),
+    loops_(ref.loops_),
     d(new Private(*ref.d))
 {
 }
@@ -500,6 +558,7 @@ ControlFlow::~ControlFlow()
 ControlFlow& ControlFlow::operator=(const ControlFlow &ref)
 {
     bbs_ = ref.bbs_;
+    loops_ = ref.loops_;
     delete d;
     d = new Private(*ref.d);
     return *this;

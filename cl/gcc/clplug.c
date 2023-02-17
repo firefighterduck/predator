@@ -2089,21 +2089,10 @@ static void handle_fnc_bb(struct basic_block_def *bb)
 {
     // declare bb
     char *label = index_to_label(bb->index);
-    loop_p loop = bb->loop_father;
-    char *header_label = NULL;
-    char *latch_label = NULL;
-    if (loop && loop->header->index) {
-        header_label = index_to_label(loop->header->index);
-        latch_label = index_to_label(loop->latch->index);
-    }
+    int loop_parent = bb->loop_father->num; // loop_father is never NULL, it can only point to the loop with num 0 if the block is not in a loop
 
-    cl->bb_open(cl, label, header_label, latch_label);
+    cl->bb_open(cl, label, loop_parent);
     free(label);
-
-    if(loop && loop->header->index){
-        free(header_label);
-        free(latch_label);
-    }
 
     // go through the bb's content
     struct gimple_walk_data data = { false };
@@ -2158,6 +2147,36 @@ static void handle_fnc_decl_arglist(tree args)
     }
 }
 
+static void collect_loops()
+{
+    loop_p loop;
+    FOR_EACH_LOOP(loop, LI_FROM_INNERMOST) {
+        if (loop) {
+            int id = loop->num;
+            if (id) {
+                char *header = index_to_label(loop->header->index);
+                char *latch = index_to_label(loop->latch->index);
+
+                std::vector<int> children;
+                for (auto child = loop->inner; child != NULL; child = child->next) {
+                    children.push_back(child->num);
+                }
+
+                cl->loop(cl, id, header, latch, children);
+
+                free(header);
+                free(latch);
+
+                for (auto exit_ = loop->exits->next; exit_ != loop->exits; exit_ = exit_->next) {
+                    char *dest = index_to_label(exit_->e->dest->index);
+                    cl->loop_exit(cl, id, dest);
+                    free(dest);
+                }
+            }
+        }
+    }
+}
+
 // handle FUNCTION_DECL tree node given as DECL
 static void handle_fnc_decl(tree decl)
 {
@@ -2166,7 +2185,7 @@ static void handle_fnc_decl(tree decl)
     // emit fnc declaration
     struct cl_operand fnc;
     handle_operand(&fnc, decl);
-    loop_optimizer_init(LOOPS_HAVE_SIMPLE_LATCHES | LOOPS_HAVE_RECORDED_EXITS);
+    loop_optimizer_init(LOOPS_HAVE_SIMPLE_LATCHES | LOOPS_HAVE_RECORDED_EXITS | LOOPS_HAVE_PREHEADERS);
     cl->fnc_open(cl, &fnc);
 
     // emit arg declarations
@@ -2182,6 +2201,9 @@ static void handle_fnc_decl(tree decl)
 
     // go through CFG
     handle_fnc_cfg(def->cfg);
+
+    // Collect loop information
+    collect_loops();
 
     // fnc traverse complete
     cl->fnc_close(cl);

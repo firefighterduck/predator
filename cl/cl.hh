@@ -64,8 +64,21 @@ class ICodeListener {
         /// See cl_code_listener::bb_open
         virtual void bb_open(
             const char              *bb_name,
-            const char              *header=0,
-            const char              *latch=0)
+            int                     loop_parent=0)
+            = 0;
+
+        /// See cl_code_listener::loop
+        virtual void loop(
+            int                     id,
+            const char              *header,
+            const char              *latch,
+            std::vector<int>  &children)
+            = 0;
+
+        /// See cl_code_listener::loop_exit
+        virtual void loop_exit(
+            int                     id,
+            const char              *exit_bb)
             = 0;
 
         /// See cl_code_listener::insn

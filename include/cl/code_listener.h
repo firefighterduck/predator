@@ -21,6 +21,7 @@
 #define H_GUARD_CODE_LISTENER_H
 
 #include <stdbool.h>
+#include <vector>
 
 #ifdef __cplusplus
 extern "C" {
@@ -866,8 +867,29 @@ struct cl_code_listener {
     void (*bb_open)(
             struct cl_code_listener     *self,
             const char                  *label,
+            int                         loop_parent);
+
+    /**
+     * loop initiation callback
+     * @param self Pointer to cl_code_listener object.
+     */
+    void (*loop)(
+            struct cl_code_listener     *self,
+            int                         id,
             const char                  *header,
-            const char                  *latch);
+            const char                  *latch,
+            std::vector<int>            &children);
+
+    /**
+     * loop exit adding callback
+     * @param self Pointer to cl_code_listener object.
+     * @param id id of the loop exited by exit
+     * @param exit Zero-terminated string containing label (and thus BB) name of the exit block
+     */
+    void (*loop_exit)(
+            struct cl_code_listener         *self,
+            int                             id,
+            const char                      *exit_bb);
 
     /**
      * one-shot instruction callback

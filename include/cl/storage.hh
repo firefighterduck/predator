@@ -464,8 +464,7 @@ class Block {
         Block(ControlFlow *cfg, const char *name):
             cfg_(cfg),
             name_(name),
-            header_(-1),
-            latch_(-1)
+            loop_parent_(-1)
         {
         }
 
@@ -539,23 +538,129 @@ class Block {
         /// return true, if a loop at the level of CFG starts with this block
         bool isLoopEntry() const;
 
-        void set_loop_info(int header, int latch)  {
-            if (this->header_ < 0 && header > 0) {
-                this->header_=header;
-                this->latch_=latch;
+        void setLoopParent(int loop_parent)  {
+            if (this->loop_parent_ < 0 && loop_parent > 0) {
+                this->loop_parent_ = loop_parent;
             }
         }
 
-        int loop_header() const                { return header_;        }
-        int loop_latch() const                 { return latch_;         }
+        int loopParent() const                      { return loop_parent_;  }
 
     private:
         TList insns_;
         TTargetList inbound_;
         ControlFlow *cfg_;
         std::string name_;
-        int header_;
-        int latch_;
+        int loop_parent_; // called loop_father in gcc
+};
+
+class Loop {
+    private:
+        typedef STD_VECTOR(const Loop *) TList;
+
+    public:
+        typedef TList::const_iterator const_iterator;
+        typedef const_iterator iterator;
+
+    public:
+        int index_;
+
+        Loop() {}
+        Loop(int index):
+            index_(index)
+        {
+        }
+        
+        ~Loop() {}
+
+        void appendChild(Loop *child);
+        void appendExit(const Block *exit_bb);
+
+        /**
+         * return STL-like iterator to go through all the child loops
+         */
+        const_iterator begin()        const { return children_.begin(); }
+
+        /**
+         * return STL-like iterator to go through all the child loops
+         */
+        const_iterator end()          const { return children_.end(); }
+
+        const TTargetList& exits()    const { return exits_;          }
+
+        /**
+         * direct access to instruction by its index.
+         * @param idx Index of instruction to access (staring with zero).
+         * @attention There is no range check performed.
+         */
+        const Block* operator[](unsigned idx) const { return exits_[idx];   }
+
+        void setHeader(const Block *header) {
+            this->header_ = header;
+        }
+        const Block* getHeader()             const { return header_;        }
+
+        void setLatch(const Block *latch) {
+            this->latch_ = latch;
+        }
+        const Block* getLatch()              const { return latch_;        }
+
+    private:
+        TList children_;
+        const Loop *parent_;
+        const Block *header_;
+        const Block *latch_;
+        TTargetList exits_;
+};
+
+class LoopInfo {
+    private:
+        typedef STD_VECTOR(Loop *) TList;
+        
+    public:
+        typedef TList::const_iterator const_iterator;
+        typedef const_iterator iterator;
+        LoopInfo();
+        ~LoopInfo();
+        LoopInfo(const LoopInfo &);               ///< shallow copy
+        LoopInfo& operator=(const LoopInfo &);    ///< shallow copy
+
+        /**
+         * look for a loop by id, create one if not found
+         * @param id id of the loop to look for
+         * @return referenced pointer to either a found or just created loop
+         * @attention created objects will @b not be destroyed automatically
+         */
+        Loop*& operator[](int id);
+
+        /**
+         * look for a loop by id, crash if not found
+         * @attention It is not safe to look for a non-existing loop, it
+         * will jump to debugger in that case.
+         * @param id id of the loop to look for
+         * @return pointer to the found Var object
+         */
+        const Loop* operator[](int id) const;
+
+        /**
+         * return STL-like iterator to go through all loops inside
+         */
+        const_iterator begin()                const { return loops_.begin(); }
+
+        /**
+         * return STL-like iterator to go through all loops inside
+         */
+        const_iterator end()                  const { return loops_.end();   }
+
+        /**
+         * return count of loops inside the control flow graph
+         */
+        size_t size()                         const { return loops_.size();  }
+
+    private:
+        TList loops_;
+        struct Private;
+        Private *d;
 };
 
 /**
@@ -614,8 +719,12 @@ class ControlFlow {
          */
         size_t size()                         const { return bbs_.size();  }
 
+        LoopInfo &loops()                           { return loops_;      }
+        const LoopInfo &loops()               const { return loops_;      }
+
     private:
         TList bbs_;
+        LoopInfo loops_;
         struct Private;
         Private *d;
 };

@@ -76,10 +76,25 @@ class ClFilterBase: public ICodeListener {
 
         virtual void bb_open(
             const char              *bb_name,
-            const char              *header=0,
-            const char              *latch=0)
+            int                     loop_parent=0)
         {
-            slave_->bb_open(bb_name,header,latch);
+            slave_->bb_open(bb_name, loop_parent);
+        }
+
+        virtual void loop(
+            int                      id,
+            const char               *header,
+            const char               *latch,
+            std::vector<int>   &children)
+        {
+            slave_->loop(id, header, latch, children);
+        }
+
+        virtual void loop_exit(
+            int                     id,
+            const char              *exit_bb)
+        {
+            slave_->loop_exit(id, exit_bb);
         }
 
         virtual void insn(

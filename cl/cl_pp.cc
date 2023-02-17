@@ -53,8 +53,17 @@ class ClPrettyPrint: public ICodeListener {
 
         virtual void bb_open(
             const char              *bb_name,
-            const char              *header=0,
-            const char              *latch=0);
+            int                     loop_parent=0);
+
+        virtual void loop(
+            int                      id,
+            const char               *header,
+            const char               *latch,
+            std::vector<int>   &children);
+
+        virtual void loop_exit(
+            int                     id,
+            const char              *exit_bb);
 
         virtual void insn(
             const struct cl_insn    *cli);
@@ -193,14 +202,16 @@ void ClPrettyPrint::fnc_close()
 }
 
 void ClPrettyPrint::bb_open(
-            const char              *bb_name,
-            [[maybe_unused]] const char *header, [[maybe_unused]] const char *latch)
+            const char              *bb_name, [[maybe_unused]] int loop_parent)
 {
     out_ << std::endl;
     out_ << "\t"
         << SSD_INLINE_COLOR(C_LIGHT_CYAN, bb_name)
         << SSD_INLINE_COLOR(C_LIGHT_RED, ":") << std::endl;
 }
+
+void ClPrettyPrint::loop(int, const char *, const char *,std::vector<int> &) { }
+void ClPrettyPrint::loop_exit(int,const char *) { }
 
 namespace {
     string prettyEscaped(const char *raw_str) {

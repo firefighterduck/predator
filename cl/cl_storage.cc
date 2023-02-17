@@ -630,20 +630,39 @@ void ClStorageBuilder::fnc_close()
     d->fnc = 0;
 }
 
-void ClStorageBuilder::bb_open(const char *bb_name, const char * header, const char * latch)
+void ClStorageBuilder::bb_open(const char *bb_name, int loop_parent)
 {
     ControlFlow &cfg = d->fnc->cfg;
     d->bb = cfg[bb_name];
+    d->bb->setLoopParent(loop_parent);
+}
+
+void ClStorageBuilder::loop(
+    int                    id,
+    const char             *header,
+    const char             *latch,
+    std::vector<int> &children)
+{
+    LoopInfo &loops = d->fnc->cfg.loops();
+    Loop *loop = loops[id];
     
-    if(header!=NULL && latch!=NULL){
-        int old_errno = errno;
-        errno = 0;
-        int header_i = std::strtol(header, NULL, 10);
-        int latch_i = std::strtol(latch, NULL, 10);
-        if (errno == 0)
-            d->bb->set_loop_info(header_i, latch_i);
-        errno = old_errno;
+    const Block *header_bb = d->fnc->cfg[header];
+    loop->setHeader(header_bb);
+
+    const Block *latch_bb = d->fnc->cfg[latch];
+    loop->setLatch(latch_bb);
+
+    for (auto child_id : children) {
+        Loop *child = loops[child_id];
+        loop->appendChild(child);
     }
+}
+
+void ClStorageBuilder::loop_exit(int id, const char *exit_bb) {
+    LoopInfo &loops = d->fnc->cfg.loops();
+    Loop *loop = loops[id];
+    const Block *exit_p = d->fnc->cfg[exit_bb];
+    loop->appendExit(exit_p);
 }
 
 void ClStorageBuilder::insn(const struct cl_insn *cli)

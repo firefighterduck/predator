@@ -73,11 +73,26 @@ class ClfCbSeqChk: public ClFilterBase {
 
         virtual void bb_open(
             const char              *bb_name,
-            const char              *header,
-            const char              *latch)
+            int                     loop_parent)
         {
             this->setState(S_BLOCK_LEVEL);
-            ClFilterBase::bb_open(bb_name, header, latch);
+            ClFilterBase::bb_open(bb_name, loop_parent);
+        }
+
+        virtual void loop(
+            int                      id,
+            const char               *header,
+            const char               *latch,
+            std::vector<int>   &children)
+        {
+            ClFilterBase::loop(id, header, latch, children);
+        }
+
+        virtual void loop_exit(
+            int                     id,
+            const char              *exit_bb)
+        {
+            ClFilterBase::loop_exit(id, exit_bb);
         }
 
         virtual void insn(
@@ -253,11 +268,26 @@ class ClfLabelChk: public ClFilterBase {
 
         virtual void bb_open(
             const char              *bb_name,
-            const char              *header,
-            const char              *latch)
+            int                     loop_parent)
         {
             this->defineLabel(bb_name);
-            ClFilterBase::bb_open(bb_name, header, latch);
+            ClFilterBase::bb_open(bb_name, loop_parent);
+        }
+
+        virtual void loop(
+            int                     id,
+            const char              *header,
+            const char              *latch,
+            std::vector<int>  &children)
+        {
+            ClFilterBase::loop(id, header, latch, children);
+        }
+
+        virtual void loop_exit(
+            int                     id,
+            const char              *exit_bb)
+        {
+            ClFilterBase::loop_exit(id, exit_bb);
         }
 
         virtual void insn(

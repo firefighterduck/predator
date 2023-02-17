@@ -255,10 +255,27 @@ static void cl_wrap_fnc_close(
 static void cl_wrap_bb_open(
             struct cl_code_listener *self,
             const char              *bb_name,
-            const char              *header,
-            const char              *latch)
+            int                     loop_parent)
 {
-    CL_WRAP_VA(bb_open, bb_name, header, latch);
+    CL_WRAP_VA(bb_open, bb_name, loop_parent);
+}
+
+static void cl_wrap_loop(
+            struct cl_code_listener  *self,
+            int                      id,
+            const char               *header,
+            const char               *latch,
+            std::vector<int>   &children)
+{
+    CL_WRAP_VA(loop, id, header, latch, children);
+}
+
+static void cl_wrap_loop_exit(
+            struct cl_code_listener * self,
+            int                     id,
+            const char              *exit_bb)
+{
+    CL_WRAP_VA(loop_exit, id, exit_bb);
 }
 
 static void cl_wrap_insn(
@@ -340,6 +357,8 @@ struct cl_code_listener* cl_create_listener_wrap(ICodeListener *listener)
     wrap->fnc_arg_decl      = cl_wrap_fnc_arg_decl;
     wrap->fnc_close         = cl_wrap_fnc_close;
     wrap->bb_open           = cl_wrap_bb_open;
+    wrap->loop              = cl_wrap_loop;
+    wrap->loop_exit         = cl_wrap_loop_exit;
     wrap->insn              = cl_wrap_insn;
     wrap->insn_call_open    = cl_wrap_insn_call_open;
     wrap->insn_call_arg     = cl_wrap_insn_call_arg;

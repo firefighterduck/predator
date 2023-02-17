@@ -692,15 +692,45 @@ static std::string to_json(const Block &bb) {
     //TODO: can be empty:
     out << INDENT << "\"targets\": " << to_json(bb.targets()) << ",\n";
     out << INDENT << "\"inbounds\": " << to_json(bb.inbound());
-    if (bb.loop_header()>0) {
-        out << ",\n";
-        out << INDENT << "\"loop_header\": " << bb.loop_header() << ",\n";
-        out << INDENT << "\"loop_latch\": " << bb.loop_latch() << "\n";
-    } else {
-        out << "\n";
+    if(bb.loopParent() > 0) {
+        out << ",\n" << INDENT << "\"loop_parent\": " << bb.loopParent();
     }
     out << INDENT << "})";
     INDENT_DOWN;
+    return out.str();
+}
+
+static std::string to_json(const Loop *loop) {
+    std::stringstream out;
+    out << std::boolalpha;
+    out << "( " << loop->index_ << ",\n";
+    INDENT_UP;
+    out << INDENT << "{\n";
+    out << INDENT << "\"header\": \"" << loop->getHeader()->name() << "\",\n";
+    out << INDENT << "\"latch\": \"" << loop->getLatch()->name() << "\",\n";
+    out << INDENT << "\"children\": [\n";
+    int ni=0;
+    for(const Loop* child: *loop) {
+        if(ni++>0) out << ",\n";
+        out << child->index_;
+    }
+    out << "\n";
+    out << INDENT << "],\n";
+    out << INDENT << "\"exits\": " << to_json(loop->exits());
+    out << INDENT << "})";
+    INDENT_DOWN;
+    return out.str();
+}
+
+static std::string to_json(const LoopInfo &loops) {
+    std::stringstream out;
+    out << std::boolalpha;
+    int ni=0;
+    for (auto loop : loops) {
+        if(ni++>0) out << ",\n";
+        out << to_json(loop);
+    }
+    out << "\n";
     return out.str();
 }
 
@@ -738,6 +768,12 @@ static std::string to_json(const Fnc &f) {
         out << to_json(*bb);
     }
     out << "\n";
+    out << INDENT << "],\n";
+    INDENT_DOWN;
+    out << INDENT << "\"loops\": [\n";
+    INDENT_UP;
+    auto loops = f.cfg.loops();
+    out << to_json(loops) << "\n";
     out << INDENT << "]\n";
     INDENT_DOWN;
     out << INDENT << "})";

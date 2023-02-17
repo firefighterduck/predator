@@ -54,8 +54,17 @@ class ClDotGenerator: public ICodeListener {
 
         virtual void bb_open(
             const char              *bb_name,
-            const char              *header=0,
-            const char              *latch=0);
+            int                     loop_parent=0);
+
+        virtual void loop(
+            int                     id,
+            const char              *header,
+            const char              *latch,
+            std::vector<int>  &children);
+
+        virtual void loop_exit(
+            int                     id,
+            const char              *exit_bb);
 
         virtual void insn(
             const struct cl_insn    *cli);
@@ -535,7 +544,7 @@ void ClDotGenerator::fnc_close()
     bb_.clear();
 }
 
-void ClDotGenerator::bb_open(const char *bb_name, [[maybe_unused]] const char * header, [[maybe_unused]] const char * latch)
+void ClDotGenerator::bb_open(const char *bb_name, [[maybe_unused]] int loop_parent)
 {
     if (!bb_.empty())
         // emit last BB
@@ -551,6 +560,9 @@ void ClDotGenerator::bb_open(const char *bb_name, [[maybe_unused]] const char * 
         << "\tstyle=dashed;" << std::endl
         << "\tURL=\"\";" << std::endl;
 }
+
+void ClDotGenerator::loop(int,const char *,const char *,std::vector<int> &) {}
+void ClDotGenerator::loop_exit(int,const char *) { }
 
 void ClDotGenerator::insn(const struct cl_insn *cli)
 {
