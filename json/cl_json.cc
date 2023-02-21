@@ -706,8 +706,8 @@ static std::string to_json(const Loop *loop) {
     out << "( " << loop->index_ << ",\n";
     INDENT_UP;
     out << INDENT << "{\n";
-    out << INDENT << "\"header\": \"" << loop->getHeader()->name() << "\",\n";
-    out << INDENT << "\"latch\": \"" << loop->getLatch()->name() << "\",\n";
+    if (loop->getHeader()) out << INDENT << "\"header\": " << to_json(loop->getHeader()) << ",\n";
+    if (loop->getLatch()) out << INDENT << "\"latch\": " << to_json(loop->getLatch()) << ",\n";
     out << INDENT << "\"children\": [\n";
     int ni=0;
     for(const Loop* child: *loop) {

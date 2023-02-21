@@ -163,14 +163,18 @@ std::string ClfUniLabel::resolveLabel(const char *label)
 
 int ClfUniLabel::labelLookup(const char *label)
 {
-    std::string str(label);
+    if (label) {
+        std::string str(label);
 
-    TMap::iterator i = map_.find(str);
-    if (map_.end() != i)
-        return i->second;
+        TMap::iterator i = map_.find(str);
+        if (map_.end() != i)
+            return i->second;
 
-    map_[str] = ++last_;
-    return last_;
+        map_[str] = ++last_;
+        return last_;
+    } else {
+        return 0;
+    }
 }
 
 void ClfUniLabel::reset()

@@ -586,6 +586,11 @@ const Block* ControlFlow::operator[](const char *name) const
 }
 
 
+bool ControlFlow::hasBlock(const char *name) const 
+{
+    return (d->db.find(name) != d->db.end());
+}
+
 // /////////////////////////////////////////////////////////////////////////////
 // Fnc implementation
 inline const struct cl_cst& cstFromFnc(const Fnc &fnc)

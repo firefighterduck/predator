@@ -567,7 +567,10 @@ class Loop {
 
         Loop() {}
         Loop(int index):
-            index_(index)
+            index_(index),
+            parent_(NULL),
+            header_(NULL),
+            latch_(NULL)
         {
         }
         
@@ -703,6 +706,8 @@ class ControlFlow {
          * @return pointer to the found Var object
          */
         const Block* operator[](const char *name) const;
+
+        bool hasBlock(const char *name) const;
 
         /**
          * return STL-like iterator to go through all basic blocks inside

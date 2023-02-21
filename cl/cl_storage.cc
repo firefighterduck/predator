@@ -35,6 +35,8 @@
 
 #include <boost/foreach.hpp>
 #include <boost/tuple/tuple.hpp>
+#include <stdio.h>
+#include <string>
 
 namespace CodeStorage {
     /**
@@ -646,11 +648,15 @@ void ClStorageBuilder::loop(
     LoopInfo &loops = d->fnc->cfg.loops();
     Loop *loop = loops[id];
     
-    const Block *header_bb = d->fnc->cfg[header];
-    loop->setHeader(header_bb);
+    if (header && d->fnc->cfg.hasBlock(header)) {
+        const Block *header_bb = d->fnc->cfg[header];
+        loop->setHeader(header_bb);
+    }
 
-    const Block *latch_bb = d->fnc->cfg[latch];
-    loop->setLatch(latch_bb);
+    if (latch && d->fnc->cfg.hasBlock(latch)) {
+        const Block *latch_bb = d->fnc->cfg[latch];
+        loop->setLatch(latch_bb);
+    }
 
     for (auto child_id : children) {
         Loop *child = loops[child_id];
@@ -661,8 +667,11 @@ void ClStorageBuilder::loop(
 void ClStorageBuilder::loop_exit(int id, const char *exit_bb) {
     LoopInfo &loops = d->fnc->cfg.loops();
     Loop *loop = loops[id];
-    const Block *exit_p = d->fnc->cfg[exit_bb];
-    loop->appendExit(exit_p);
+
+    if (exit_bb && d->fnc->cfg.hasBlock(exit_bb)) {
+        const Block *exit_p = d->fnc->cfg[exit_bb];
+        loop->appendExit(exit_p);
+    }
 }
 
 void ClStorageBuilder::insn(const struct cl_insn *cli)

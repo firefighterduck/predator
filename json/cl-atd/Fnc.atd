@@ -6,11 +6,19 @@ type cl_operand <ocaml from="Operand" t="t"> = abstract
 
 (* type state <ocaml from="State" t="t"> = abstract *)
 
+type loop = {
+  header : cl_uid;
+  ?latch : cl_uid option;
+  children : cl_uid list;
+  exits : cl_uid list;
+}
+
 type t = {
   def : cl_operand;
   ~vars : cl_uid list; (* var.uid *)
   ~args : cl_uid list; (* var.uid of arguments *)
   cfg : (cl_uid * block) list; (* [] - extern fnc/empty *)
+  loops: (cl_uid * loop) list;
   (* ?specs <ocaml mutable> : state option; *)
 }
 

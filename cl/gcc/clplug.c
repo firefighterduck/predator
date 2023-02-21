@@ -25,6 +25,10 @@
 #include <cfgloop.h>
 #include <stdio.h>
 
+#if defined(GCCPLUGIN_VERSION_MAJOR) && (GCCPLUGIN_VERSION_MAJOR >= 12)
+#   define GCC_HOST_12_OR_NEWER
+#endif
+
 #if defined(GCCPLUGIN_VERSION_MAJOR) && (GCCPLUGIN_VERSION_MAJOR >= 8)
 #   define GCC_HOST_8_OR_NEWER
 #endif
@@ -2149,14 +2153,23 @@ static void handle_fnc_decl_arglist(tree args)
 
 static void collect_loops()
 {
+#if defined(GCC_HOST_12_OR_NEWER)
+    for (auto loopr : loops_list(cfun, LI_FROM_INNERMOST)) {
+        loop_p loop = loopr;
+#else
     loop_p loop;
     FOR_EACH_LOOP(loop, LI_FROM_INNERMOST) {
+#endif
         if (loop) {
             int id = loop->num;
-            if (id) {
-                char *header = index_to_label(loop->header->index);
-                char *latch = index_to_label(loop->latch->index);
-
+            if (id>0) {
+                char *header = NULL;
+                if (loop->header){
+                    header = index_to_label(loop->header->index);
+                }
+                char *latch = NULL;
+                if (loop->latch) 
+                    latch = index_to_label(loop->latch->index);
                 std::vector<int> children;
                 for (auto child = loop->inner; child != NULL; child = child->next) {
                     children.push_back(child->num);
@@ -2164,10 +2177,10 @@ static void collect_loops()
 
                 cl->loop(cl, id, header, latch, children);
 
-                free(header);
-                free(latch);
+                if (loop->header) free(header);
+                if (loop->latch) free(latch);
 
-                for (auto exit_ = loop->exits->next; exit_ != loop->exits; exit_ = exit_->next) {
+                for (auto exit_ = loop->exits->next; exit_ != loop->exits && exit_; exit_ = exit_->next) {
                     char *dest = index_to_label(exit_->e->dest->index);
                     cl->loop_exit(cl, id, dest);
                     free(dest);
@@ -2185,7 +2198,8 @@ static void handle_fnc_decl(tree decl)
     // emit fnc declaration
     struct cl_operand fnc;
     handle_operand(&fnc, decl);
-    loop_optimizer_init(LOOPS_HAVE_SIMPLE_LATCHES | LOOPS_HAVE_RECORDED_EXITS | LOOPS_HAVE_PREHEADERS);
+    loop_optimizer_init(LOOPS_MAY_HAVE_MULTIPLE_LATCHES | LOOPS_HAVE_RECORDED_EXITS);
+    record_loop_exits();
     cl->fnc_open(cl, &fnc);
 
     // emit arg declarations
